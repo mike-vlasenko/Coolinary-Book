@@ -24,6 +24,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+
 class User(UserMixin, db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
@@ -42,7 +43,7 @@ class BlogPost(db.Model):
 
     # Create Foreign Key, "users.id" the users refers to the tablename of User.
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    # Create reference to the User object, the "posts" refers to the posts protperty in the User class.
+    # Create reference to the User object, the "posts" refers to the posts property in the User class.
     author = relationship("User", back_populates="posts")
 
     title = db.Column(db.String(250), unique=True, nullable=False)
@@ -51,6 +52,7 @@ class BlogPost(db.Model):
     body = db.Column(db.Text, nullable=False)
     img_url = db.Column(db.String(250), nullable=False)
     comments = relationship("BlogComments", back_populates="parent_post")
+
 
 class BlogComments(db.Model):
     __tablename__ = "blog_comments"
@@ -63,6 +65,7 @@ class BlogComments(db.Model):
     parent_post = relationship("BlogPost", back_populates="comments")
     body = db.Column(db.Text, nullable=False)
 
+
 db.create_all()
 
 # LOGIN MANAGER
@@ -74,15 +77,17 @@ login_manager.init_app(app)
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+
 # DECORATOR FUNCTION
 def admin_only(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        #If id is not 1 then return abort with 403 error
+        # If id is not 1 then return abort with 403 error
         if current_user.id != 1:
             return abort(403)
-        #Otherwise continue with the route function
+        # Otherwise continue with the route function
         return f(*args, **kwargs)
+
     return decorated_function
 
 
@@ -95,7 +100,6 @@ gravatar = Gravatar(app,
                     force_lower=False,
                     use_ssl=False,
                     base_url=None)
-
 
 
 @app.route('/')
@@ -117,7 +121,7 @@ def register():
         new_user = User(
             name=form.name.data,
             email=form.email.data,
-            password= generate_password_hash(form.password.data, 'pbkdf2:sha256', 8),
+            password=generate_password_hash(form.password.data, 'pbkdf2:sha256', 8),
             # about = form.about.data
         )
         db.session.add(new_user)
@@ -127,7 +131,6 @@ def register():
         login_user(new_user)
         return redirect(url_for("get_all_posts"))
     return render_template("register.html", form=form)
-
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -160,7 +163,7 @@ def logout():
     return redirect(url_for('get_all_posts'))
 
 
-@app.route("/post/<int:post_id>", methods=['GET', 'POST'] )
+@app.route("/post/<int:post_id>", methods=['GET', 'POST'])
 def show_post(post_id):
     form = AddComment()
     if form.validate_on_submit():
@@ -242,9 +245,6 @@ def edit_post(post_id):
     return render_template("make-post.html", form=edit_form)
 
 
-
-
-
 @app.route("/delete/<int:post_id>")
 @admin_only
 def delete_post(post_id):
@@ -255,4 +255,4 @@ def delete_post(post_id):
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+    app.run()
